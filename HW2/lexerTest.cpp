@@ -5,6 +5,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+    vector<string> tokenStringVector;
     if (argc < 2)
     {
         cout << "Error: No python file provided" << endl;
@@ -13,7 +14,6 @@ int main(int argc, char *argv[])
     {
         ifstream file(argv[1]); // Open the file for reading
         char ch;
-        vector<string> tokenStringArray;
 
         if (file.is_open())
         {
@@ -27,10 +27,9 @@ int main(int argc, char *argv[])
                 { // If it is then we add the current temp string into the array
                     if (tempString.length() > 0 && tempString.length() > commentLength)
                     {
-                        cout << "String: '" << tempString << "' with length of " << tempString.length() << " with a commentLength of " << commentLength << endl;
                         int endPosition = tempString.length() - commentLength;
-                        cout << "Sliced String: " << tempString.substr(0, endPosition) << endl;
-                        tokenStringArray.push_back(tempString.substr(0, endPosition));
+
+                        tokenStringVector.push_back(tempString.substr(0, endPosition));
                         tempString = "";
                     }
                     tempString = "";
@@ -53,11 +52,26 @@ int main(int argc, char *argv[])
                 }
             }
             file.close(); // Close the file when done
+            if (tempString.length() > 0 && tempString.length() > commentLength)
+            {
+                int endPosition = tempString.length() - commentLength;
+
+                tokenStringVector.push_back(tempString.substr(0, endPosition));
+                tempString = "";
+            }
+            tempString = "";
+            lineIsComment = false;
+            commentLength = 0;
         }
         else
         {
             cerr << "Unable to open file!" << endl;
         }
+    }
+
+    for (int arrayIndex = 0; arrayIndex < tokenStringVector.size(); arrayIndex++)
+    {
+        cout << tokenStringVector[arrayIndex] << endl;
     }
 
     return 0;
