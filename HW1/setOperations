@@ -1,0 +1,17 @@
+from functools import reduce
+
+# Sample sets
+set1 = {'cat', 'dog', 'blue', 'red'}
+set2 = {'cat', 'dog', 'pink', 'red'}
+
+# Difference using reduce and filter
+difference = reduce(lambda acc, elem: acc | {elem}, filter(lambda x: x not in set2, set1), set())
+print("Difference:", difference)
+
+# Union using reduce and map
+union = reduce(lambda acc, s: acc | s, map(set, [set1, set2]), set())
+print("Union:", union)
+
+# Intersection using reduce and filter
+intersection = reduce(lambda acc, elem: acc | {elem}, filter(lambda x: x in set2, set1), set())
+print("Intersection:", intersection)
