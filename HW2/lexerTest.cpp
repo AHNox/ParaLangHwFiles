@@ -25,10 +25,25 @@ int main(int argc, char *argv[])
                 // Checks if the current value is a newline
                 if (ch == '\n' || ch == '\r')
                 { // If it is then we add the current temp string into the array
-                    if (tempString.length() > 0 && tempString.length() > commentLength)
+                    bool isSpace = true;
+                    int endPosition = tempString.length() - commentLength;
+                    for (int index = 0; index < tempString.length(); index++)
                     {
-                        int endPosition = tempString.length() - commentLength;
-
+                        if (tempString[index] == '#' && isSpace == true)
+                        {
+                            endPosition -= index;
+                        }
+                        if (tempString[index] != ' ')
+                        {
+                            isSpace = false;
+                        }
+                    }
+                    /*
+                            cout
+                        << tempString << endl;
+                    cout << tempString.length() << " " << commentLength << endl;*/
+                    if (tempString.length() > 0 && tempString.length() > commentLength && endPosition != 0)
+                    {
                         tokenStringVector.push_back(tempString.substr(0, endPosition));
                         tempString = "";
                     }
