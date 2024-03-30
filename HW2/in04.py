@@ -1,12 +1,10 @@
-y = 10
+# Test Case for: Multiplication and addition
 
-if y > 5:
-    # Nested if-else
-    if y > 15:
-        resultNested = y - 5
-    else:
-        resultNested = y + 5  #15
-else:
-    resultNested = y * 2
+a = 100 + 2 * 3 * 4 * 5 + 12
+b = 10 * 2 + 3 * 5 + 4 * 6 + 1 * 2
+c = 10 + 20 + 30 + 40 + 50 + 1 * 60
 
-print("ResultNested =", resultNested)
+#print
+print("a =", a)
+print("b =", b)
+print("c =", c)
