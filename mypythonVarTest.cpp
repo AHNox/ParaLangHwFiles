@@ -3,13 +3,13 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <stack>
 
 using namespace std;
 
 void Print(string line, unordered_map <string, string> variables)// Work in progress
 {
     line = line.substr(6, line.size() - 7);
-    //cout << line << endl;
     stringstream input(line);
     string temp;
     while(input.good())
@@ -25,7 +25,6 @@ void Print(string line, unordered_map <string, string> variables)// Work in prog
         }
         cout << " ";
     }
-
     cout << endl;
 }
 
@@ -42,61 +41,75 @@ bool isInt(string line)
     }
 }
 
+int operations(int a, int b, char oprt)
+{
+    if (oprt == '+') {
+        return a + b ;
+    } 
+    else if (oprt == '-') {
+        return a - b;
+    } 
+    else if (oprt == '*') {
+        return a * b;
+    } 
+    else if (oprt == '/') {
+        return a / b;
+    }
+    else 
+        return 0;
+}
+
 int EvalExpression(string line, unordered_map <string, string> variables)
 {
     istringstream input(line);
     string first;
-    int result;
     char oprt;
     string operand;
+    int temp;
+    int temp2;
+    stack <char> oprtStack;
+    stack <int> oprndStack;
 
     input >> first;
     if (isInt(first))
-    {
-        result = stoi(first);
-    }
+        temp = stoi(first);
     else
-    {
-        result = stoi(variables[first]);
-    }
+        temp = stoi(variables[first]);
+
+    oprndStack.push(temp);
 
     while (input >> oprt >> operand)
     {
-        if(isInt(operand)) 
+        if (!isInt(operand))
+            operand = variables[operand];
+
+        oprtStack.push(oprt);
+
+        if (oprtStack.top() == '*' || oprtStack.top() == '/')
         {
-            if (oprt == '+') {
-                result += stoi(operand);
-            } 
-            else if (oprt == '-') {
-                result -= stoi(operand);
-            } 
-            else if (oprt == '*') {
-                result *= stoi(operand);
-            } 
-            else if (oprt == '/') {
-                result /= stoi(operand);
-            }
-            else;
+            temp = oprndStack.top();
+            oprndStack.pop();
+            //cout << temp << " " << oprtStack.top() << " " << operand << endl;
+            oprndStack.push(operations(temp, stoi(operand), oprtStack.top()));
+            oprtStack.pop();
         }
         else 
         {
-            if (oprt == '+') {
-                result += stoi(variables[operand]);
-            } 
-            else if (oprt == '-') {
-                result -= stoi(variables[operand]);
-            } 
-            else if (oprt == '*') {
-                result *= stoi(variables[operand]);
-            } 
-            else if (oprt== '/') {
-                result /= stoi(variables[operand]);
-            }
-            else;
+            oprndStack.push(stoi(operand));
         }
     }
-    
-    return result;
+
+    while (oprndStack.size() != 1)
+    {
+            temp = oprndStack.top();
+            oprndStack.pop();
+            temp2 = oprndStack.top();
+            oprndStack.pop();
+            oprndStack.push(operations(temp2, temp, oprtStack.top()));
+            oprtStack.pop();
+    }
+
+    return oprndStack.top();
 }
 
 int main(int argc, char* argv[]) {
