@@ -6,13 +6,97 @@
 
 using namespace std;
 
-void print(string line)// Work in progress
+void Print(string line, unordered_map <string, string> variables)// Work in progress
 {
     line = line.substr(6, line.size() - 7);
-    //stringstream input(line);
-    //string temp;
+    //cout << line << endl;
+    stringstream input(line);
+    string temp;
+    while(input.good())
+    {
+        getline(input, temp, ',');
+        if (temp[0] == '"')
+        {
+            cout << temp.substr(1,temp.size() - 2);
+        }
+        else
+        {
+            cout << variables[temp.substr(1,temp.size() -1)];
+        }
+        cout << " ";
+    }
 
-    cout << line << endl;
+    cout << endl;
+}
+
+bool isInt(string line)
+{
+    if (line.size() == 0)
+        return true;
+    else
+    {
+        if (isdigit(line[0]))
+            return isInt(line.substr(1));
+        else
+            return false;
+    }
+}
+
+int EvalExpression(string line, unordered_map <string, string> variables)
+{
+    istringstream input(line);
+    string first;
+    int result;
+    char oprt;
+    string operand;
+
+    input >> first;
+    if (isInt(first))
+    {
+        result = stoi(first);
+    }
+    else
+    {
+        result = stoi(variables[first]);
+    }
+
+    while (input >> oprt >> operand)
+    {
+        if(isInt(operand)) 
+        {
+            if (oprt == '+') {
+                result += stoi(operand);
+            } 
+            else if (oprt == '-') {
+                result -= stoi(operand);
+            } 
+            else if (oprt == '*') {
+                result *= stoi(operand);
+            } 
+            else if (oprt == '/') {
+                result /= stoi(operand);
+            }
+            else;
+        }
+        else 
+        {
+            if (oprt == '+') {
+                result += stoi(variables[operand]);
+            } 
+            else if (oprt == '-') {
+                result -= stoi(variables[operand]);
+            } 
+            else if (oprt == '*') {
+                result *= stoi(variables[operand]);
+            } 
+            else if (oprt== '/') {
+                result /= stoi(variables[operand]);
+            }
+            else;
+        }
+    }
+    
+    return result;
 }
 
 int main(int argc, char* argv[]) {
@@ -35,23 +119,24 @@ int main(int argc, char* argv[]) {
     string line;
     while (getline(file, line)) {
 
-        cout << line << endl;
+        //cout << line << endl;
 
         if (line.substr(0,6) == "print(") //If a print statement is detected, it runs our print function
         {
-            print(line);
+            Print(line, variables);
         }
 
         
-        else if (line.find('=') != string::npos) //Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
+        else if (line.find(" = ") != string::npos) //Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
         {
             // If a variable declaration is detected, then the variable is added to our variable map
             int mid = line.find('=');
             string name = line.substr(0,mid - 1);
             string exp = line.substr(mid + 1);
+            //cout << exp << endl;
 
-            variables[name] = exp;
-            cout << variables[name] << endl;
+            variables[name] = to_string(EvalExpression(exp, variables));
+            //cout << variables[name] << endl;
         }
 
         else // Work in progress
