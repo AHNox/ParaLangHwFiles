@@ -2,72 +2,108 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cctype>
+#include <unordered_map>
 
 enum class TokenType
 {
     // Single-character tokens
-    LEFT_PAREN,  // (         (0)
-    RIGHT_PAREN, // )         (1)
-    LEFT_BRACE,  // {         (2)
-    RIGHT_BRACE, // }         (3)
-    COMMA,       // ,         (4)
-    DOT,         // .         (5)
-    MINUS,       // -         (6)
-    PLUS,        // +         (7)
-    SEMICOLON,   // ;         (8)
-    SLASH,       // /         (9)
-    STAR,        // *         (10)
+    LEFT_PAREN,  // (          (0)
+    RIGHT_PAREN, // )          (1)
+    LEFT_BRACE,  // {          (2)
+    RIGHT_BRACE, // }          (3)
+    COMMA,       // ,          (4)
+    DOT,         // .          (5)
+    MINUS,       // -          (6)
+    PLUS,        // +          (7)
+    SEMICOLON,   // ;          (8)
+    SLASH,       // /          (9)
+    STAR,        // *          (10)
+    DOUB_QUOTE,  // "          (11)
 
     // One or two character tokens
-    BANG,          // !       (11)
-    BANG_EQUAL,    // !=      (12)
-    EQUAL,         // =       (13)
-    EQUAL_EQUAL,   // ==      (14)
-    GREATER,       // >       (15)
-    GREATER_EQUAL, // >=      (16)
-    LESS,          // <       (17)
-    LESS_EQUAL,    // <=      (18)
+    BANG,          // !          (12)
+    BANG_EQUAL,    // !=         (13)
+    EQUAL,         // =          (14)
+    EQUAL_EQUAL,   // ==         (15)
+    GREATER,       // >          (16)
+    GREATER_EQUAL, // >=         (17)
+    LESS,          // <          (18)
+    LESS_EQUAL,    // <=         (19)
 
     // Literals
-    IDENTIFIER, // identifier (19)
-    STRING,     // string     (20)
-    NUMBER,     // number     (21)
+    IDENTIFIER, // identifier (20)
+    STRING,     // string     (21)
+    NUMBER,     // number     (22)
 
     // Keywords
-    AND,      // and          (22)
-    AS,       // as           (23)
-    ASSERT,   // assert       (24)
-    BREAK,    // break        (25)
-    CLASS,    // class        (26)
-    CONTINUE, // continue     (27)
-    DEF,      // def          (28)
-    DEL,      // del          (29)
-    ELIF,     // elif         (30)
-    ELSE,     // else         (31)
-    EXCEPT,   // except       (32)
-    FALSE,    // False        (33)
-    FINALLY,  // finally      (34)
-    FOR,      // for          (35)
-    FROM,     // from         (36)
-    GLOBAL,   // global       (37)
-    IF,       // if           (38)
-    IMPORT,   // import       (39)
-    IN,       // in           (40)
-    IS,       // is           (41)
-    LAMBDA,   // lambda       (42)
-    NONE,     // None         (43)
-    NONLOCAL, // nonlocal     (44)
-    NOT,      // not          (45)
-    OR,       // or           (46)
-    PASS,     // pass         (47)
-    RAISE,    // raise        (48)
-    RETURN,   // return       (49)
-    TRUE,     // True         (50)
-    TRY,      // try          (51)
-    WHILE,    // while        (52)
-    WITH,     // with         (53)
-    YIELD,    // yield        (54)
+    AND,    // and        (23)
+    BREAK,  // break      (24)
+    DEF,    // def        (25)
+    ELIF,   // elif       (26)
+    ELSE,   // else       (27)
+    FALSE,  // False      (28)
+    GLOBAL, // global     (29)
+    IF,     // if         (30)
+    IN,     // in         (31)
+    IS,     // is         (32)
+    LAMBDA, // lambda     (33)
+    NONE,   // None       (34)
+    OR,     // or         (35)
+    RETURN, // return     (36)
+    TRUE,   // True       (37)
+    TRY,    // try        (38)
+    PRINT,  // print      (39)
+    BLANK
 };
+
+enum charType
+{
+    blank,
+    digit,
+    letter,
+    irregChar,
+    whitespace,
+};
+
+unordered_map<string, TokenType> tokenMap = {
+    {"(", TokenType::LEFT_PAREN},
+    {")", TokenType::RIGHT_PAREN},
+    {"{", TokenType::LEFT_BRACE},
+    {"}", TokenType::RIGHT_BRACE},
+    {",", TokenType::COMMA},
+    {".", TokenType::DOT},
+    {"-", TokenType::MINUS},
+    {"+", TokenType::PLUS},
+    {";", TokenType::SEMICOLON},
+    {"/", TokenType::SLASH},
+    {"*", TokenType::STAR},
+    {"\"", TokenType::DOUB_QUOTE},
+    {"!", TokenType::BANG},
+    {"!=", TokenType::BANG_EQUAL},
+    {"=", TokenType::EQUAL},
+    {"==", TokenType::EQUAL_EQUAL},
+    {">", TokenType::GREATER},
+    {">=", TokenType::GREATER_EQUAL},
+    {"<", TokenType::LESS},
+    {"<=", TokenType::LESS_EQUAL},
+    {"and", TokenType::AND},
+    {"break", TokenType::BREAK},
+    {"def", TokenType::DEF},
+    {"elif", TokenType::ELIF},
+    {"else", TokenType::ELSE},
+    {"False", TokenType::FALSE},
+    {"global", TokenType::GLOBAL},
+    {"if", TokenType::IF},
+    {"in", TokenType::IN},
+    {"is", TokenType::IS},
+    {"lambda", TokenType::LAMBDA},
+    {"None", TokenType::NONE},
+    {"or", TokenType::OR},
+    {"return", TokenType::RETURN},
+    {"True", TokenType::TRUE},
+    {"try", TokenType::TRY},
+    {"print", TokenType::PRINT}};
 
 struct token
 {
@@ -75,12 +111,188 @@ struct token
     string contents;
 };
 
+class Lexer
+{
+private:
+    const vector<string> &lines;
+    // size_t lineIndexer;
+    // size_t charIndexer;
+    string lexeme;
+    charType currCharType;
+    TokenType currToken;
+    char currChar;
+    bool inQuote;
+    int prevLineLevel, currLineLevel;
+
+public:
+    Lexer() : lines(vector<string>()),
+              // lineIndexer(0),
+              // charIndexer(0),
+              lexeme(""),
+              currCharType(blank),
+              currToken(TokenType::BLANK),
+              currChar('\0'),
+              inQuote(false),
+              prevLineLevel(-1),
+              currLineLevel(0)
+    {
+    }
+
+    Lexer(const vector<string> &lines) : lines(lines),
+                                         // lineIndexer(0),
+                                         // charIndexer(0),
+                                         lexeme(""),
+                                         currCharType(blank),
+                                         currToken(TokenType::BLANK),
+                                         currChar('\0'),
+                                         inQuote(false),
+                                         prevLineLevel(-1),
+                                         currLineLevel(0)
+    {
+    }
+
+    void printLine(int currLine)
+    {
+        cout << lines[currLine] << endl;
+    }
+
+    void
+    lexLine(int currLine)
+    {
+        printLine(currLine);
+        cout << endl;
+
+        for (int charIndex = 0; charIndex < lines[currLine].size(); charIndex++)
+        {
+            getChar(currLine, charIndex);
+            // cout << "|>" << lines[currLine][charIndex] << "<| " << endl
+            //   << endl;
+        }
+
+        currCharType = blank;
+        lexeme = "";
+        currChar = '\0';
+        inQuote = false;
+        // charIndexer = 0;
+        // lineIndexer++;
+
+        cout << endl;
+    }
+
+    void getChar(int lineIndexer, int charIndexer)
+    {
+        currChar = lines[lineIndexer][charIndexer];
+        currCharType = getCharType(currChar);
+        char nextChar = lines[lineIndexer][charIndexer + 1];
+
+        if (charIndexer < lines[lineIndexer].size())
+        {
+            if (currChar == '"')
+            {
+                if (inQuote == true)
+                {
+                    tokenLookUp();
+                    cout << "Token: " << static_cast<int>(currToken) << " ";
+                    cout << "lexeme = '" << lexeme << "'" << endl;
+                    lexeme = "";
+                    inQuote = false;
+                    return;
+                }
+                else
+                {
+                    tokenLookUp();
+                    cout << "Token: " << static_cast<int>(currToken) << " ";
+                    cout << "lexeme = '" << lexeme << "'" << endl;
+                    lexeme = "";
+                    inQuote = true;
+                    return;
+                }
+            }
+
+            addChar();
+            cout << "currChar: " << currChar << " lexeme: " << lexeme << " inQuote: " << inQuote << " currCharType: " << currCharType << " nextCharType: " << getCharType(nextChar) << endl;
+            if (getCharType(nextChar) != currCharType && inQuote == false /* && (inQuote == false)*/)
+            {
+                // if (currCharType != blank)
+                //{
+                tokenLookUp();
+                cout << "Token: " << static_cast<int>(currToken) << " ";
+                cout << "lexeme = '" << lexeme << "'" << endl;
+                lexeme = "";
+                //}
+            }
+            currCharType = getCharType(currChar);
+            charIndexer++;
+        }
+    }
+
+    charType getCharType(char currChar)
+    {
+        if (currChar == ' ')
+        {
+            return whitespace;
+        }
+        else if (isalpha(currChar))
+        {
+            return letter;
+        }
+        else if (isdigit(currChar))
+        {
+            return digit;
+        }
+        else
+        {
+            return irregChar;
+        }
+    }
+
+    void addChar()
+    {
+        lexeme += currChar;
+    }
+
+    bool isEndOfFile(int lineIndexer, int charIndexer) const
+    {
+        return lineIndexer >= lines.size() && charIndexer >= lines.back().size();
+    }
+
+    void tokenLookUp()
+    {
+        auto it = tokenMap.find(lexeme);
+        if (it != tokenMap.end())
+        {
+            // cout << lexeme << " is found in the map with TokenType: " << static_cast<int>(it->second) << endl;
+            currToken = (it->second);
+        }
+        else
+        {
+            // cout << lexeme << " is not found in the map." << endl;
+            if (isdigit(lexeme[0]))
+            {
+                currToken = TokenType::NUMBER;
+            }
+            else
+            {
+                if (inQuote == true)
+                {
+                    currToken = TokenType::STRING;
+                }
+                else
+                {
+                    currToken = TokenType::IDENTIFIER;
+                }
+            }
+        }
+    }
+};
+
 int main(int argc, char *argv[])
 {
-    vector<string> tokenStringVector;
+    vector<string> inputLines;
     if (argc < 2)
     {
-        cout << "Error: No python file provided" << endl;
+        cerr << "Error: No python file provided" << endl;
+        return -1;
     }
     else
     {
@@ -116,7 +328,7 @@ int main(int argc, char *argv[])
                     cout << tempString.length() << " " << commentLength << endl;*/
                     if (tempString.length() > 0 && tempString.length() > commentLength && endPosition != 0)
                     {
-                        tokenStringVector.push_back(tempString.substr(0, endPosition));
+                        inputLines.push_back(tempString.substr(0, endPosition));
                         tempString = "";
                     }
                     tempString = "";
@@ -143,7 +355,7 @@ int main(int argc, char *argv[])
             {
                 int endPosition = tempString.length() - commentLength;
 
-                tokenStringVector.push_back(tempString.substr(0, endPosition));
+                inputLines.push_back(tempString.substr(0, endPosition));
                 tempString = "";
             }
             tempString = "";
@@ -152,18 +364,27 @@ int main(int argc, char *argv[])
         }
         else
         {
-            cerr << "Unable to open file!" << endl;
+            cerr << "Error: Unable to open file! || File does not exist!" << endl;
+            return -1;
         }
     }
 
-    for (int arrayIndex = 0; arrayIndex < tokenStringVector.size(); arrayIndex++)
+    Lexer theLexer(inputLines);
+
+    for (int arrayIndex = 0; arrayIndex < inputLines.size(); arrayIndex++)
     {
-        cout << tokenStringVector[arrayIndex] << endl;
+        // theLexer.printLine(arrayIndex);
+        theLexer.lexLine(arrayIndex);
+        /*
+                cout
+            << inputLines[arrayIndex] << endl;
+        for (int charIndex = 0; charIndex < inputLines[arrayIndex].size(); charIndex++)
+        {
+            cout << "|>" << inputLines[arrayIndex][charIndex] << "<|   ";
+        }
+        cout << endl;
+        */
     }
-
-    TokenType tokenTypeAt1 = TokenType::STAR;
-
-    cout << "Token type: " << static_cast<int>(tokenTypeAt1) << endl;
 
     return 0;
 }
