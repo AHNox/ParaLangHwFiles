@@ -63,6 +63,24 @@ int operations(int a, int b, char oprt)
         return 0;
 }
 
+bool LogicOps(int a, int b, string oprt)
+{
+    if (oprt == "==")
+        return a == b;
+    else if (oprt == ">=")
+        return a >= b;
+    else if (oprt == "<=")
+        return a <= b;
+    else if (oprt == "!=")
+        return a != b;
+    else if (oprt == "<")
+        return a < b;
+    else if (oprt == ">")
+        return a > b;
+    else
+        return false;
+}
+
 int EvalExpression(string line, unordered_map <string, string> variables)
 {
     istringstream input(line);  // Stringstream is used to utilize strings as inputs (rather than depending on console inputs)
@@ -118,6 +136,33 @@ int EvalExpression(string line, unordered_map <string, string> variables)
     return oprndStack.top();                // The only value left in the stack by this point is the final value, so we return it
 }
 
+bool LogicEval(string line, unordered_map <string, string> variables)
+{
+    line = line.substr(3);
+    line.erase(line.find(":"));
+    string oprt;
+
+    if (line.find("==")!= string::npos)
+        oprt = "==";
+    else if (line.find(">=")!= string::npos)
+        oprt = ">=";
+    else if (line.find("<=")!= string::npos)
+        oprt = "<=";
+    else if (line.find("!=")!= string::npos)
+        oprt = "!=";
+    else if (line.find("<")!= string::npos)
+        oprt = "!=";
+    else if (line.find(">")!= string::npos)
+        oprt = ">";
+    else
+        return false;
+    string left = line.substr(0, line.find(oprt));
+    string right = line.substr(line.find(oprt) + 3);
+
+    return LogicOps(EvalExpression(left, variables), EvalExpression(right, variables), oprt);
+    
+}
+
 int main(int argc, char* argv[]) {
     // Check if filename is provided
     if (argc != 2) {
@@ -142,6 +187,18 @@ int main(int argc, char* argv[]) {
             Print(line, variables);
         }
 
+        else if (line.substr(0,2) == "if") 
+        {
+            
+            if(LogicEval(line, variables))
+            {
+                //This is where we put what happens if the statement is true
+            }
+            else
+            {
+                //This is where we decide what to do in case of false
+            }
+        }
         
         else if (line.find(" = ") != string::npos) //Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
         {
@@ -153,9 +210,9 @@ int main(int argc, char* argv[]) {
             variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
         }
 
-        else // Work in progress
+        else
         {
-            //cout << "Implementation not finished for line" << endl;
+            // 
         }
     }
 
