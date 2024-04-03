@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <stack>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -173,11 +174,11 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
     else
         return;
 
-    cout << "'" << logicalExp << "'" << endl;
+    // cout << "'" << logicalExp << "'" << endl;
     string left = logicalExp.substr(0, line.find(oprt) - 4);
-    cout << left << endl;
+    // cout << left << endl;
     string right = logicalExp.substr(line.find(oprt));
-    cout << right << endl;
+    // cout << right << endl;
 
     arrayIndex += 1;
     string statementLine = inputLines[arrayIndex];
@@ -191,7 +192,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 
     while (LineIndentLevel(inputLines[arrayIndex], 0) == 4)
     {
-        cout << "this is inside if statement: " << inputLines[arrayIndex] << endl;
+        // cout << "this is inside if statement: " << inputLines[arrayIndex] << endl;
         ifStmts.push_back(inputLines[arrayIndex]);
         arrayIndex++;
     }
@@ -200,7 +201,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
         arrayIndex++;
         while (LineIndentLevel(inputLines[arrayIndex], 0) == 4)
         {
-            cout << "this is inside else statement: " << inputLines[arrayIndex] << endl;
+            // cout << "this is inside else statement: " << inputLines[arrayIndex] << endl;
             elseStmts.push_back(inputLines[arrayIndex]);
             arrayIndex++;
         }
@@ -210,11 +211,16 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
         for (int indexer = 0; indexer < ifStmts.size(); indexer++)
         {
             line = ifStmts[indexer];
-            int mid = line.find('=');
-            string name = line.substr(0, mid - 1); // Determines what the name of the variable is
-            string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
 
-            variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+            if (line.find(" = ") != string::npos)
+            {
+                int mid = line.find('=');
+                string name = line.substr(0, mid - 1); // Determines what the name of the variable is
+                string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
+
+                name.erase(remove_if(name.begin(), name.end(), ::isspace), name.end());
+                variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+            }
         }
     }
     else
@@ -222,12 +228,15 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
         for (int indexer = 0; indexer < elseStmts.size(); indexer++)
         {
             // run elseStmts;
-            line = elseStmts[indexer];
-            int mid = line.find('=');
-            string name = line.substr(0, mid - 1); // Determines what the name of the variable is
-            string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
+            if (line.find(" = ") != string::npos)
+            {
+                line = elseStmts[indexer];
+                int mid = line.find('=');
+                string name = line.substr(0, mid - 1); // Determines what the name of the variable is
+                string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
 
-            variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+                variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+            }
         }
     }
 }

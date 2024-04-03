@@ -49,17 +49,17 @@ int operations(int a, int b, char oprt)
 
     if (oprt == '+') {
         return a + b ;
-    } 
+    }
     else if (oprt == '-') {
         return a - b;
-    } 
+    }
     else if (oprt == '*') {
         return a * b;
-    } 
+    }
     else if (oprt == '/') {
         return a / b;
     }
-    else 
+    else
         return 0;
 }
 
@@ -117,7 +117,7 @@ int EvalExpression(string line, unordered_map <string, string> variables)
             oprndStack.push(operations(temp, stoi(operand), oprtStack.top()));
             oprtStack.pop();
         }
-        else 
+        else
         {
             oprndStack.push(stoi(operand)); // If there's no multiplying or dividing, then we simply push the operand into the stack
         }
@@ -160,7 +160,7 @@ bool LogicEval(string line, unordered_map <string, string> variables)
     string right = line.substr(line.find(oprt) + 3);
 
     return LogicOps(EvalExpression(left, variables), EvalExpression(right, variables), oprt);
-    
+
 }
 
 int main(int argc, char* argv[]) {
@@ -187,19 +187,20 @@ int main(int argc, char* argv[]) {
             Print(line, variables);
         }
 
-        else if (line.substr(0,2) == "if") 
+        else if (line.substr(0,2) == "if")
         {
-            
+
             if(LogicEval(line, variables))
             {
                 //This is where we put what happens if the statement is true
+                
             }
             else
             {
                 //This is where we decide what to do in case of false
             }
         }
-        
+
         else if (line.find(" = ") != string::npos) //Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
         {
             // If a variable declaration is detected, then the variable is added to our variable map
@@ -212,7 +213,7 @@ int main(int argc, char* argv[]) {
 
         else
         {
-            // 
+            //
         }
     }
 
