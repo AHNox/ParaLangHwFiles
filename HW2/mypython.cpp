@@ -11,7 +11,7 @@ using namespace std;
 
 void Print(string line, unordered_map<string, string> variables)
 {
-    line = line.substr(6); // Shaves down the line to not include "print(" and ")"
+    line = line.substr(6);    // Shaves down the line to not include "print(" and ")"
     line.erase(line.find(')'));
     stringstream input(line); // Declaration of stringstream to use passed lin as input
     string temp;              // Stand-in variable to help deal with inputs
@@ -155,6 +155,7 @@ bool LogicOps(int a, int b, string oprt)
 
 void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &variables, int indentLvl, int arrayIndex)
 {
+    //cout << "Running..." << endl;
     string line = inputLines[arrayIndex];
     string logicalExp = line.substr(3, line.size() - 4);
     string oprt;
@@ -168,17 +169,17 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
     else if (logicalExp.find("!=") != string::npos)
         oprt = "!=";
     else if (logicalExp.find("<") != string::npos)
-        oprt = "!=";
+        oprt = "<";
     else if (logicalExp.find(">") != string::npos)
         oprt = ">";
     else
         return;
 
-    // cout << "'" << logicalExp << "'" << endl;
-    string left = logicalExp.substr(0, line.find(oprt) - 4);
-    // cout << left << endl;
-    string right = logicalExp.substr(line.find(oprt));
-    // cout << right << endl;
+    //cout << "'" << logicalExp << "'" << endl;
+    string left = logicalExp.substr(0, logicalExp.find(oprt));
+    //cout << left << endl;
+    string right = logicalExp.substr(logicalExp.find(oprt)+ 2);
+    //cout << right << endl;
 
     arrayIndex += 1;
     string statementLine = inputLines[arrayIndex];
@@ -227,14 +228,16 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
     {
         for (int indexer = 0; indexer < elseStmts.size(); indexer++)
         {
+            line = elseStmts[indexer];
             // run elseStmts;
             if (line.find(" = ") != string::npos)
             {
-                line = elseStmts[indexer];
+                
                 int mid = line.find('=');
                 string name = line.substr(0, mid - 1); // Determines what the name of the variable is
                 string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
 
+                name.erase(remove_if(name.begin(), name.end(), ::isspace), name.end());
                 variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
             }
         }
@@ -282,10 +285,6 @@ int main(int argc, char *argv[])
                         isSpace = false;
                     }
                 }
-                /*
-                        cout
-                    << tempString << endl;
-                cout << tempString.length() << " " << commentLength << endl;*/
                 if (tempString.length() > 0 && tempString.length() > commentLength && endPosition != 0)
                 {
                     inputLines.push_back(tempString.substr(0, endPosition));
@@ -335,14 +334,14 @@ int main(int argc, char *argv[])
 
         indenLevel = LineIndentLevel(line, indenIndex);
 
-        /*if (indenLevel == 0)
-        {
-            cout << line << endl;
-        }*/
-
         if (line.substr(0, 6) == "print(") // If a print statement is detected, it runs our print function
         {
             Print(line, variables);
+        }
+
+        else if (line.substr(0, 2) == "if") // Work in progress
+        {
+            IfElseStatements(inputLines, variables, indenLevel, arrayIndex);
         }
 
         else if (line.find(" = ") != string::npos && indenLevel == 0) // Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
@@ -354,11 +353,8 @@ int main(int argc, char *argv[])
 
             variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
         }
-
-        else if (line.substr(0, 2) == "if") // Work in progress
-        {
-            IfElseStatements(inputLines, variables, indenLevel, arrayIndex);
-        }
+        else;
+        
     }
     return 0;
 }
