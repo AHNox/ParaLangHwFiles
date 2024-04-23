@@ -71,6 +71,7 @@ int operations(int a, int b, char oprt)
 
 int EvalExpression(string line, unordered_map<string, string> variables)
 {
+    cout << "Expression is: "<< line << endl;
     istringstream input(line); // Stringstream is used to utilize strings as inputs (rather than depending on console inputs)
     string first;              // Variable for the first number in the expression
     char oprt;                 // Variable for operators
@@ -79,6 +80,8 @@ int EvalExpression(string line, unordered_map<string, string> variables)
     int temp2;                 // Another stand-in
     stack<char> oprtStack;     // Stack to keep track of operators. Used to establish precedence.
     stack<int> oprndStack;     // Stack to keep track of operands. Used to establish precedence.
+    stack<int> helper1;        // Stack for flipping operand stack
+    stack<char> helper2;       // Stack for flipping operator stack
 
     input >> first;
     if (isInt(first)) // Checks if a variable is passed. If a variable is detected, then the map is accessed to find its value.
@@ -101,7 +104,7 @@ int EvalExpression(string line, unordered_map<string, string> variables)
         {
             temp = oprndStack.top();
             oprndStack.pop();
-            // cout << temp << " " << oprtStack.top() << " " << operand << endl;
+            cout << temp << " " << oprtStack.top() << " " << operand << endl;
             oprndStack.push(operations(temp, stoi(operand), oprtStack.top()));
             oprtStack.pop();
         }
@@ -111,13 +114,28 @@ int EvalExpression(string line, unordered_map<string, string> variables)
         }
     }
 
+    while (oprndStack.size() != 0)
+    {
+        helper1.push(oprndStack.top());
+        oprndStack.pop();
+    }
+    while (oprtStack.size() != 0)
+    {
+        helper2.push(oprtStack.top());
+        oprtStack.pop();
+    }
+
+    oprndStack = helper1;
+    oprtStack = helper2;
+
     while (oprndStack.size() != 1) // After all the multiplication and division has been done, we work out way through the stack and do out addition and subtraction
     {
         temp = oprndStack.top();
         oprndStack.pop();
         temp2 = oprndStack.top();
         oprndStack.pop();
-        oprndStack.push(operations(temp2, temp, oprtStack.top()));
+        oprndStack.push(operations(temp, temp2, oprtStack.top()));
+        cout << temp << " " << oprtStack.top() << " " << temp2 << endl;
         oprtStack.pop();
     }
 
@@ -337,6 +355,11 @@ int main(int argc, char *argv[])
         if (line.substr(0, 6) == "print(") // If a print statement is detected, it runs our print function
         {
             Print(line, variables);
+        }
+
+        else if (line.substr(0,3) == "def")
+        {
+            cout << "Function definition detected" << endl;
         }
 
         else if (line.substr(0, 2) == "if") // Work in progress
