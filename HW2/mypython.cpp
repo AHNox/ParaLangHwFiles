@@ -9,6 +9,13 @@
 
 using namespace std;
 
+struct boundaries
+{
+    string inputs;
+    int start;
+    int end;
+};
+
 void Print(string line, unordered_map<string, string> variables)
 {
     line = line.substr(6);    // Shaves down the line to not include "print(" and ")"
@@ -69,9 +76,11 @@ int operations(int a, int b, char oprt)
         return 0;
 }
 
-int EvalExpression(string line, unordered_map<string, string> variables)
+int FunctionCall(string, vector<string>, unordered_map <string, string>, unordered_map <string, boundaries>, string, int);
+
+int EvalExpression(vector <string> inputLines, string line, unordered_map<string, string> variables, unordered_map <string, boundaries> functions)
 {
-    cout << "Expression is: "<< line << endl;
+    //cout << "Expression is: "<< line << endl;
     istringstream input(line); // Stringstream is used to utilize strings as inputs (rather than depending on console inputs)
     string first;              // Variable for the first number in the expression
     char oprt;                 // Variable for operators
@@ -82,12 +91,22 @@ int EvalExpression(string line, unordered_map<string, string> variables)
     stack<int> oprndStack;     // Stack to keep track of operands. Used to establish precedence.
     stack<int> helper1;        // Stack for flipping operand stack
     stack<char> helper2;       // Stack for flipping operator stack
+    string function;
 
     input >> first;
     if (isInt(first)) // Checks if a variable is passed. If a variable is detected, then the map is accessed to find its value.
         temp = stoi(first);
     else
-        temp = stoi(variables[first]);
+    {
+        if(variables.find(first) != variables.end())
+            temp = stoi(variables[first]);
+        else if(functions.find(first.substr(0, first.find('('))) != functions.end())
+        {
+            //cout << first << endl;
+            function = first.substr(0, first.find('('));
+            temp = FunctionCall(first, inputLines, variables, functions, function, functions[function].start);
+        }
+    }
 
     oprndStack.push(temp); // Pushes the first integer into the stack
 
@@ -96,7 +115,15 @@ int EvalExpression(string line, unordered_map<string, string> variables)
     while (input >> oprt >> operand)
     {
         if (!isInt(operand)) // Accesses value of variable if one is passed
-            operand = variables[operand];
+        {
+            if (variables.find(operand) != variables.end())
+                operand = variables[operand];
+            else if (functions.find(operand.substr(0, operand.find('('))) != functions.end())
+            {
+                function = operand.substr(0, operand.find('('));
+                operand = FunctionCall(operand, inputLines, variables, functions, function, functions[function].start);
+            }
+        }
 
         oprtStack.push(oprt); // Pushes next operator in the line to the operator stack
 
@@ -104,7 +131,7 @@ int EvalExpression(string line, unordered_map<string, string> variables)
         {
             temp = oprndStack.top();
             oprndStack.pop();
-            cout << temp << " " << oprtStack.top() << " " << operand << endl;
+            //cout << temp << " " << oprtStack.top() << " " << operand << endl;
             oprndStack.push(operations(temp, stoi(operand), oprtStack.top()));
             oprtStack.pop();
         }
@@ -135,7 +162,7 @@ int EvalExpression(string line, unordered_map<string, string> variables)
         temp2 = oprndStack.top();
         oprndStack.pop();
         oprndStack.push(operations(temp, temp2, oprtStack.top()));
-        cout << temp << " " << oprtStack.top() << " " << temp2 << endl;
+        //cout << temp << " " << oprtStack.top() << " " << temp2 << endl;
         oprtStack.pop();
     }
 
@@ -171,7 +198,7 @@ bool LogicOps(int a, int b, string oprt)
         return false;
 }
 
-void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &variables, int indentLvl, int arrayIndex)
+void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &variables, unordered_map<string, boundaries> functions, int indentLvl, int arrayIndex)
 {
     //cout << "Running..." << endl;
     string line = inputLines[arrayIndex];
@@ -225,7 +252,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
             arrayIndex++;
         }
     }
-    if (LogicOps(EvalExpression(left, variables), EvalExpression(right, variables), oprt))
+    if (LogicOps(EvalExpression(inputLines, left, variables, functions), EvalExpression(inputLines, right, variables, functions), oprt))
     {
         for (int indexer = 0; indexer < ifStmts.size(); indexer++)
         {
@@ -238,7 +265,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
                 string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
 
                 name.erase(remove_if(name.begin(), name.end(), ::isspace), name.end());
-                variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+                variables[name] = to_string(EvalExpression(inputLines, exp, variables, functions)); // Evaluates the right side of the variable declaration
             }
         }
     }
@@ -256,10 +283,102 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
                 string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
 
                 name.erase(remove_if(name.begin(), name.end(), ::isspace), name.end());
-                variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+                variables[name] = to_string(EvalExpression(inputLines, exp, variables, functions)); // Evaluates the right side of the variable declaration
             }
         }
     }
+}
+
+
+
+void FunctionDeclaration(vector<string> inputLines, unordered_map <string, boundaries>& functions, int indentLvl, int arrayIndex)
+{
+    //cout << arrayIndex << endl;
+    string line = inputLines[arrayIndex];
+    int varStart = line.find('(');
+    int lowerBound = arrayIndex;
+    string defName = line.substr(4, varStart - 4);
+    string inputs = line.substr(varStart + 1, line.find(')') - varStart - 1);
+
+    arrayIndex++;
+    while(arrayIndex < inputLines.size() && LineIndentLevel(inputLines[arrayIndex], indentLvl) > indentLvl)
+        arrayIndex++;
+    //cout << line << endl;
+    //cout << defName << endl;
+    //cout << inputs << endl;
+    //cout << arrayIndex;
+    functions[defName].start = lowerBound;
+    functions[defName].end = arrayIndex;
+    functions[defName].inputs = inputs;
+
+}
+
+int FunctionCall(string introLine, vector<string> inputLines, unordered_map <string, string> variables, unordered_map <string, boundaries> functions, string function, int arrayIndex)
+{
+    unordered_map <string, string> funcVars; //Local Variable map
+    //Variable assignment for passed values
+    stringstream input(functions[function].inputs);
+    stringstream passed(introLine.substr(introLine.find('(') + 1, introLine.find(')') - (introLine.find('(') + 1)));
+    string temp;
+    string temp2;
+
+    while(input.good() && passed.good())
+    {
+        getline(input, temp, ',');
+        getline(passed, temp2, ',');
+        if (!isInt(temp2))
+            temp2 = variables[temp2];
+        funcVars[temp] = temp2;
+        //cout << funcVars[temp] << endl;
+    }
+
+    while (arrayIndex < functions[function].end)
+    {
+        
+        string line = inputLines[arrayIndex].substr(4);
+        //cout << line << endl;
+
+        int indenLevel = 0, indenIndex = 0;
+
+        indenLevel = LineIndentLevel(line, indenIndex);
+
+        if (line.substr(0, 6) == "print(")
+        {
+            Print(line, funcVars);
+        }
+
+        else if (line.substr(0, 2) == "if")
+        {
+            IfElseStatements(inputLines, funcVars, functions, indenLevel, arrayIndex);
+        }
+
+        else if (line.find(" = ") != string::npos && indenLevel == 0) // Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
+        {
+            // If a variable declaration is detected, then the variable is added to our variable map
+            int mid = line.find('=');
+            string name = line.substr(0, mid - 1); // Determines what the name of the variable is
+            string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
+            //cout << line << endl;
+            funcVars[name] = to_string(EvalExpression(inputLines, exp, funcVars, functions)); // Evaluates the right side of the variable declaration
+        }
+        else if (line.substr(0, 6) == "return")
+        {
+            //cout << "Return detected" << endl;
+            string ret = line.substr(7);
+            //cout << ret << endl;
+            if (isInt(ret))
+                return stoi(ret);
+            else
+            {
+                if (funcVars.find(ret) != funcVars.end())
+                    return stoi(funcVars[ret]);
+            }
+        }
+        else;
+
+        arrayIndex++;
+    }
+    return -1;
 }
 
 int main(int argc, char *argv[])
@@ -341,6 +460,7 @@ int main(int argc, char *argv[])
     }
 
     unordered_map<string, string> variables; // Map used to store variable's names and assignments
+    unordered_map<string, boundaries> functions;
     bool isIfInsideIfElse = false;
 
     for (int arrayIndex = 0; arrayIndex < inputLines.size(); arrayIndex++)
@@ -359,12 +479,13 @@ int main(int argc, char *argv[])
 
         else if (line.substr(0,3) == "def")
         {
-            cout << "Function definition detected" << endl;
+            //cout << "Function definition detected" << endl;
+            FunctionDeclaration(inputLines, functions, indenLevel, arrayIndex);
         }
 
         else if (line.substr(0, 2) == "if") // Work in progress
         {
-            IfElseStatements(inputLines, variables, indenLevel, arrayIndex);
+            IfElseStatements(inputLines, variables, functions, indenLevel, arrayIndex);
         }
 
         else if (line.find(" = ") != string::npos && indenLevel == 0) // Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
@@ -373,8 +494,7 @@ int main(int argc, char *argv[])
             int mid = line.find('=');
             string name = line.substr(0, mid - 1); // Determines what the name of the variable is
             string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
-
-            variables[name] = to_string(EvalExpression(exp, variables)); // Evaluates the right side of the variable declaration
+            variables[name] = to_string(EvalExpression(inputLines, exp, variables, functions)); // Evaluates the right side of the variable declaration
         }
         else;
         
