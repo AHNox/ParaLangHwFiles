@@ -202,7 +202,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 {
     cout << "Running...'" << inputLines[arrayIndex] << "'" << endl;
     string line = inputLines[arrayIndex];
-    string logicalExp = line.substr(indentLvl + 3, line.size() - 4);
+    string logicalExp = line.substr(indentLvl + 3, line.size() - indentLvl - 4);
     string oprt;
 
     if (logicalExp.find("==") != string::npos)
