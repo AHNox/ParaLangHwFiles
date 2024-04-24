@@ -259,6 +259,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 
     if (LogicOps(EvalExpression(inputLines, left, variables, functions), EvalExpression(inputLines, right, variables, functions), oprt))
     {
+        cout << "Run if" << endl;
         for (int indexer = 0; indexer < ifStmts.size(); indexer++)
         {
             // cout << "running if line: " << ifStmts[indexer] << endl;
@@ -282,6 +283,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
     }
     else
     {
+        cout << "Run else" << endl;
         for (int indexer = 0; indexer < elseStmts.size(); indexer++)
         {
             // cout << "running else line: " << elseStmts[indexer] << endl;
