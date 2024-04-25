@@ -171,7 +171,7 @@ int EvalExpression(vector<string> inputLines, string line, unordered_map<string,
 
 int LineIndentLevel(string line, int baseIden)
 {
-    int indenLevel = baseIden, indenIndex = 0;
+    int indenLevel = baseIden, indenIndex = baseIden;
     while (line[indenIndex] == ' ')
     {
         indenIndex++;
@@ -200,7 +200,7 @@ bool LogicOps(int a, int b, string oprt)
 
 void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &variables, unordered_map<string, boundaries> functions, int indentLvl, int arrayIndex)
 {
-    cout << "Running...'" << inputLines[arrayIndex] << "'" << endl;
+    // cout << "Running...'" << inputLines[arrayIndex] << "'" << endl;
     string line = inputLines[arrayIndex];
     string logicalExp = line.substr(indentLvl + 3, line.size() - indentLvl - 4);
     string oprt;
@@ -225,11 +225,11 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 
     // cout << "Line: '" << inputLines[arrayIndex] << "'" << indentLvl << " " << baseIndex << endl;
 
-    cout << "'" << logicalExp << "'" << endl;
+    // cout << "'" << logicalExp << "'" << endl;
     string left = logicalExp.substr(0, logicalExp.find(oprt) - 1);
-    cout << "'" << left << "'" << endl;
+    // cout << "'" << left << "'" << endl;
     string right = logicalExp.substr(logicalExp.find(oprt) + 2);
-    cout << "'" << right << "'" << endl;
+    // cout << "'" << right << "'" << endl;
 
     arrayIndex += 1;
 
@@ -240,22 +240,44 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 
     while (LineIndentLevel(inputLines[arrayIndex], 0) >= indentLvl + 4)
     {
-        // cout << "this is inside if statement: " << inputLines[arrayIndex] << endl;
+        cout << "this is inside if statement: " << inputLines[arrayIndex] << endl;
         ifStmts.push_back(inputLines[arrayIndex]);
         arrayIndex++;
     }
-    if (inputLines[arrayIndex].substr(indentLvl, indentLvl + 4) == "else")
+    cout << "this is else statement: ::" << inputLines[arrayIndex] << ":: and ::" << inputLines[arrayIndex].substr(indentLvl, 4) << "::" << endl;
+    if (inputLines[arrayIndex].substr(indentLvl, 4) == "else")
     {
         arrayIndex++;
-        while (LineIndentLevel(inputLines[arrayIndex], 0) >= indentLvl + 4 && !inputLines[arrayIndex].empty())
+        cout << "this is inside else statement: " << inputLines[arrayIndex] << " " << inputLines[arrayIndex].substr(indentLvl, 4) << endl;
+        // cout << "lineindentlvl " << LineIndentLevel(inputLines[arrayIndex], indentLvl) << " indentlvl+4 " << indentLvl + 4 << endl;
+
+        while (LineIndentLevel(inputLines[arrayIndex], indentLvl) >= indentLvl + 4 && !inputLines[arrayIndex].empty() /*&& arrayIndex < inputLines.size() - 1*/)
         {
-            // cout << "this is inside else statement: " << inputLines[arrayIndex] << endl;
+            cout << "this is inside else statement: " << inputLines[arrayIndex] << endl;
             elseStmts.push_back(inputLines[arrayIndex]);
-            arrayIndex++;
+            if (arrayIndex < inputLines.size() - 1)
+            {
+                arrayIndex++;
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
-    cout << EvalExpression(inputLines, left, variables, functions) << " " << EvalExpression(inputLines, right, variables, functions) << " " << oprt << endl;
+    cout << EvalExpression(inputLines, left, variables, functions) << " " << oprt << " " << EvalExpression(inputLines, right, variables, functions) << endl;
+    /*
+    cout << "If Lines:" << endl;
+    for (int indexer = 0; indexer < ifStmts.size(); indexer++)
+    {
+        cout << ifStmts[indexer] << endl;
+    }
+    cout << "Else Lines:" << endl;
+    for (int indexer = 0; indexer < elseStmts.size(); indexer++)
+    {
+        cout << elseStmts[indexer] << endl;
+    }*/
 
     if (LogicOps(EvalExpression(inputLines, left, variables, functions), EvalExpression(inputLines, right, variables, functions), oprt))
     {
@@ -265,8 +287,10 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
             // cout << "running if line: " << ifStmts[indexer] << endl;
             line = ifStmts[indexer];
 
-            if (line.find(" = ") != string::npos)
+            if (line.find(" = ") != string::npos && indentLvl + 4 == LineIndentLevel(line, indentLvl))
             {
+                cout << "this line is run " << line << endl;
+                // cout << line << " indentlvl " << indentLvl + 4 << " lineindenlvlfunc " << LineIndentLevel(line, indentLvl) << endl;
                 int mid = line.find('=');
                 string name = line.substr(0, mid - 1); // Determines what the name of the variable is
                 string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
@@ -277,6 +301,7 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
 
             else if (line.substr(indentLvl + 4, indentLvl + 2) == "if") // Work in progress
             {
+                cout << "this line is run " << line << endl;
                 IfElseStatements(ifStmts, variables, functions, indentLvl + 4, indexer);
             }
         }
@@ -286,13 +311,14 @@ void IfElseStatements(vector<string> inputLines, unordered_map<string, string> &
         cout << "Run else" << endl;
         for (int indexer = 0; indexer < elseStmts.size(); indexer++)
         {
-            // cout << "running else line: " << elseStmts[indexer] << endl;
+            cout << "running else line: " << elseStmts[indexer] << endl;
             line = elseStmts[indexer];
             // run elseStmts;
 
-            if (line.find(" = ") != string::npos)
+            if (line.find(" = ") != string::npos && indentLvl + 4 == LineIndentLevel(line, indentLvl))
             {
-
+                cout << "this line is run " << endl;
+                // cout << line << " indentlvl " << indentLvl + 4 << " lineindenlvlfunc " << LineIndentLevel(line, indentLvl) << endl;
                 int mid = line.find('=');
                 string name = line.substr(0, mid - 1); // Determines what the name of the variable is
                 string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
