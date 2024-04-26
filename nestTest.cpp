@@ -83,6 +83,7 @@ int EvalExpression(vector<string> inputLines, string line, unordered_map<string,
     // cout << "Expression is: "<< line << endl;
     istringstream input(line); // Stringstream is used to utilize strings as inputs (rather than depending on console inputs)
     string first;              // Variable for the first number in the expression
+    string extension;
     char oprt;                 // Variable for operators
     string operand;            // Variable for operands (numbers)
     int temp;                  // Stand-in varible for stack usage
@@ -102,29 +103,42 @@ int EvalExpression(vector<string> inputLines, string line, unordered_map<string,
             temp = stoi(variables[first]);
         else if (functions.find(first.substr(0, first.find('('))) != functions.end())
         {
-            // cout << first << endl;
+            //cout << first << endl;
+            while (first.find(')') == string::npos)
+            {
+                input >> extension;
+                first += extension;
+            }
+            //cout << first << endl;
             function = first.substr(0, first.find('('));
             temp = FunctionCall(first, inputLines, variables, functions, function, functions[function].start);
         }
         else if (globals.find(first) != globals.end())
         {
             temp = stoi(globals[first]);
-            //cout << "globals used..." << endl;
+            //cout << "globals used to access " << temp << endl;
+            //cout << line << endl;
         }
     }
 
     oprndStack.push(temp); // Pushes the first integer into the stack
-
     // EXPRESSION EVALUATION BELOW
 
     while (input >> oprt >> operand)
     {
+        cout << operand << endl;
         if (!isInt(operand)) // Accesses value of variable if one is passed
         {
             if (variables.find(operand) != variables.end())
+            {
                 operand = variables[operand];
+                cout << "local\n";
+            }
             else if (globals.find(operand) != globals.end())
+            {
                 operand = globals[operand];
+                cout << "global\n";
+            }
             else if (functions.find(operand.substr(0, operand.find('('))) != functions.end())
             {
                 function = operand.substr(0, operand.find('('));
@@ -358,11 +372,12 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
     string temp;
     string temp2;
     int temp3;
-
+    //cout << introLine << endl;
     while(input.good() && passed.good())
     {
         getline(input, temp, ',');
         getline(passed, temp2, ',');
+        //cout << temp2 << endl;
         if (!isInt(temp2))
         {
             if (variables.find(temp2) != variables.end())
@@ -375,8 +390,10 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
                 temp2 = to_string(temp3);
             }
         }
+        while (temp[0] == ' ')
+            temp = temp.substr(1);
         funcVars[temp] = temp2;
-        //cout << funcVars[temp] << " = "<< temp << endl;
+        cout << funcVars[temp] << " = "<< temp << endl;
     }
 
     arrayIndex++;
@@ -409,6 +426,7 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
 
         else if (line.find(" = ") != string::npos && indenLevel == baseInden) // Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
         {
+            //cout << line << endl;
             //cout << "Declaring Variable (in function)" << endl;
             // If a variable declaration is detected, then the variable is added to our variable map
             int mid = line.find('=');
@@ -548,6 +566,7 @@ int main(int argc, char *argv[])
 
         else if (line.find(" = ") != string::npos && indenLevel == 0) // Checks to see if "=" is present in input line (will have to be more specific, but this works for now)
         {
+            //cout << line << endl;
             //cout << "Declaring..." << endl;
             // If a variable declaration is detected, then the variable is added to our variable map
             int mid = line.find('=');
