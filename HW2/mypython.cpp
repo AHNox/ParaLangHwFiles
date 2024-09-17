@@ -76,21 +76,21 @@ int operations(int a, int b, char oprt)
         return 0;
 }
 
-int FunctionCall(string, vector<string>, unordered_map<string, string>, unordered_map<string, boundaries>, string, int, unordered_map <string, string>);
+int FunctionCall(string, vector<string>, unordered_map<string, string>, unordered_map<string, boundaries>, string, int, unordered_map<string, string>);
 
-int EvalExpression(vector<string> inputLines, string line, unordered_map<string, string> variables, unordered_map<string, boundaries> functions, unordered_map <string, string>globals)
+int EvalExpression(vector<string> inputLines, string line, unordered_map<string, string> variables, unordered_map<string, boundaries> functions, unordered_map<string, string> globals)
 {
     istringstream input(line); // Stringstream is used to utilize strings as inputs (rather than depending on console inputs)
     string first;              // Variable for the first number in the expression
     string extension;
-    char oprt;                 // Variable for operators
-    string operand;            // Variable for operands (numbers)
-    int temp;                  // Stand-in varible for stack usage
-    int temp2;                 // Another stand-in
-    stack<char> oprtStack;     // Stack to keep track of operators. Used to establish precedence.
-    stack<int> oprndStack;     // Stack to keep track of operands. Used to establish precedence.
-    stack<int> helper1;        // Stack for flipping operand stack
-    stack<char> helper2;       // Stack for flipping operator stack
+    char oprt;             // Variable for operators
+    string operand;        // Variable for operands (numbers)
+    int temp;              // Stand-in varible for stack usage
+    int temp2;             // Another stand-in
+    stack<char> oprtStack; // Stack to keep track of operators. Used to establish precedence.
+    stack<int> oprndStack; // Stack to keep track of operands. Used to establish precedence.
+    stack<int> helper1;    // Stack for flipping operand stack
+    stack<char> helper2;   // Stack for flipping operator stack
     string function;
 
     input >> first;
@@ -136,8 +136,8 @@ int EvalExpression(vector<string> inputLines, string line, unordered_map<string,
                 function = operand.substr(0, operand.find('('));
                 operand = to_string(FunctionCall(operand, inputLines, variables, functions, function, functions[function].start, globals));
             }
-            else;
-            
+            else
+                ;
         }
 
         oprtStack.push(oprt); // Pushes next operator in the line to the operator stack
@@ -210,7 +210,7 @@ bool LogicOps(int a, int b, string oprt)
         return false;
 }
 
-int funcArithmetic(vector <string> inputLines, string line, unordered_map <string, string> variables, unordered_map <string, boundaries> functions)
+int funcArithmetic(vector<string> inputLines, string line, unordered_map<string, string> variables, unordered_map<string, boundaries> functions)
 {
     char oprt;
     if (line.find('+') != string::npos)
@@ -341,16 +341,16 @@ void FunctionDeclaration(vector<string> inputLines, unordered_map<string, bounda
     functions[defName].inputs = inputs;
 }
 
-int FunctionCall(string introLine, vector<string> inputLines, unordered_map <string, string> variables, unordered_map <string, boundaries> functions, string function, int arrayIndex, unordered_map <string, string> globals)
+int FunctionCall(string introLine, vector<string> inputLines, unordered_map<string, string> variables, unordered_map<string, boundaries> functions, string function, int arrayIndex, unordered_map<string, string> globals)
 {
-    unordered_map <string, string> funcVars; //Local Variable map
-    //Variable assignment for passed values
+    unordered_map<string, string> funcVars; // Local Variable map
+    // Variable assignment for passed values
     stringstream input(functions[function].inputs);
     stringstream passed(introLine.substr(introLine.find('(') + 1, introLine.find(')') - (introLine.find('(') + 1)));
     string temp;
     string temp2;
     int temp3;
-    while(input.good() && passed.good())
+    while (input.good() && passed.good())
     {
         getline(input, temp, ',');
         getline(passed, temp2, ',');
@@ -372,7 +372,7 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
     }
 
     arrayIndex++;
-    int baseInden = LineIndentLevel(inputLines[arrayIndex], 0); //Finds the control for the function's indentation
+    int baseInden = LineIndentLevel(inputLines[arrayIndex], 0); // Finds the control for the function's indentation
 
     while (arrayIndex < functions[function].end)
     {
@@ -397,8 +397,8 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
         {
             // If a variable declaration is detected, then the variable is added to our variable map
             int mid = line.find('=');
-            string name = line.substr(0, mid - 1); // Determines what the name of the variable is
-            string exp = line.substr(mid + 1);     // Determines what the variable will be assigned
+            string name = line.substr(0, mid - 1);                                                     // Determines what the name of the variable is
+            string exp = line.substr(mid + 1);                                                         // Determines what the variable will be assigned
             funcVars[name] = to_string(EvalExpression(inputLines, exp, funcVars, functions, globals)); // Evaluates the right side of the variable declaration
         }
         else if (line.substr(0, 6) == "return")
@@ -412,7 +412,8 @@ int FunctionCall(string introLine, vector<string> inputLines, unordered_map <str
                     return stoi(funcVars[ret]);
             }
         }
-        else;
+        else
+            ;
 
         arrayIndex++;
     }
@@ -529,8 +530,8 @@ int main(int argc, char *argv[])
         {
             // If a variable declaration is detected, then the variable is added to our variable map
             int mid = line.find('=');
-            string name = line.substr(0, mid - 1);                                              // Determines what the name of the variable is
-            string exp = line.substr(mid + 1);                                                  // Determines what the variable will be assigned
+            string name = line.substr(0, mid - 1);                                                         // Determines what the name of the variable is
+            string exp = line.substr(mid + 1);                                                             // Determines what the variable will be assigned
             variables[name] = to_string(EvalExpression(inputLines, exp, variables, functions, variables)); // Evaluates the right side of the variable declaration
         }
     }
